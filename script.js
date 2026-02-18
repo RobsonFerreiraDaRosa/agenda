@@ -1,38 +1,35 @@
 const SUPABASE_URL = 'https://glrkrhayqppureihpwnq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdscmtyaGF5cXBwdXJlaWhwd25xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzOTk0MzcsImV4cCI6MjA4Njk3NTQzN30.O2bH1P57b05TkR5F0oQEZhReQ6dAEm7GdYHMtKqpKhk';
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Nomeamos como 'client' para não confundir com o objeto 'supabase' da CDN
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser = null;
-let currentMonth = new Date();
 
-// --- INICIALIZAÇÃO ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Vincular Eventos aos Botões
     document.getElementById('btn-entrar').addEventListener('click', handleLogin);
     document.getElementById('btn-logout').addEventListener('click', handleLogout);
-    document.getElementById('btn-novo-evento').addEventListener('click', () => openModal());
+    document.getElementById('btn-novo-evento').addEventListener('click', openModal);
     document.getElementById('btn-cancelar').addEventListener('click', closeModal);
     document.getElementById('btn-salvar').addEventListener('click', saveEvent);
     
-    // Checar se já existe sessão ativa
     checkSession();
 });
 
 async function checkSession() {
-    const { data: { session } } = await _supabase.auth.getSession();
-    if (session) {
-        loadUserProfile(session.user.id);
-    }
+    const { data: { session } } = await client.auth.getSession();
+    if (session) loadUserProfile(session.user.id);
 }
 
-// --- LOGICA DE AUTENTICAÇÃO ---
 async function handleLogin() {
     const userHandle = document.getElementById('login-user').value;
     const pass = document.getElementById('login-pass').value;
-    const email = `${userHandle}@calendario.com`;
+    
+    if(!userHandle || !pass) return alert("Preencha os campos!");
+    
+    const email = `${userHandle.trim()}@calendario.com`;
 
-    const { data, error } = await _supabase.auth.signInWithPassword({
+    const { data, error } = await client.auth.signInWithPassword({
         email: email,
         password: pass,
     });
@@ -45,7 +42,7 @@ async function handleLogin() {
 }
 
 async function loadUserProfile(userId) {
-    const { data, error } = await _supabase.from('profiles').select('*').eq('id', userId).single();
+    const { data, error } = await client.from('profiles').select('*').eq('id', userId).single();
     
     if (data) {
         currentUser = data;
@@ -62,16 +59,13 @@ async function loadUserProfile(userId) {
 }
 
 function handleLogout() {
-    _supabase.auth.signOut();
+    client.auth.signOut();
     location.reload();
 }
 
-// --- LOGICA DO CALENDÁRIO ---
 function initCalendar() {
     const grid = document.getElementById('calendar-grid');
     grid.innerHTML = '';
-    
-    // Gerar 31 dias genéricos para teste visual rápido
     for (let i = 1; i <= 31; i++) {
         const day = document.createElement('div');
         day.className = 'calendar-day';
@@ -82,58 +76,48 @@ function initCalendar() {
 }
 
 async function loadEvents() {
-    const { data, error } = await _supabase
+    const { data } = await client
         .from('events')
         .select(`*, profiles:created_by(username, color)`);
-    
     if (data) renderEvents(data);
 }
 
 function renderEvents(events) {
-    // Limpa os containers de eventos
     document.querySelectorAll('.day-events').forEach(el => el.innerHTML = '');
-    
     events.forEach(ev => {
         const startDate = new Date(ev.start_time);
         const dayContainer = document.getElementById(`day-${startDate.getDate()}`);
-        
         if (dayContainer) {
             const evEl = document.createElement('div');
             evEl.className = 'event-tag';
-            evEl.style.backgroundColor = ev.profiles.color;
-            evEl.innerText = `${ev.title} (${ev.profiles.username})`;
-            evEl.title = `Editado por ${ev.profiles.username} às ${new Date(ev.updated_at).toLocaleString()}`;
+            evEl.style.backgroundColor = ev.profiles?.color || '#3b82f6';
+            evEl.innerText = `${ev.title} (${ev.profiles?.username || 'S/N'})`;
             dayContainer.appendChild(evEl);
         }
     });
 }
 
 function subscribeRealtime() {
-    _supabase.channel('calendar-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => {
-        loadEvents();
-    })
+    client.channel('calendar-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => loadEvents())
     .subscribe();
 }
 
-// --- MODAL E CRIAÇÃO ---
 function openModal() {
-    if (!currentUser.can_edit) return alert("Você tem apenas permissão de leitura.");
+    if (!currentUser.can_edit) return alert("Acesso de leitura apenas.");
     document.getElementById('event-modal').classList.remove('hidden');
 }
 
-function closeModal() {
-    document.getElementById('event-modal').classList.add('hidden');
-}
+function closeModal() { document.getElementById('event-modal').classList.add('hidden'); }
 
 async function saveEvent() {
     const title = document.getElementById('event-name').value;
     const start = document.getElementById('event-start').value;
     const end = document.getElementById('event-end').value;
 
-    if (!confirm(`Deseja salvar esta alteração?\nUsuário: ${currentUser.username}\nData: ${new Date().toLocaleString()}`)) return;
+    if (!confirm("Confirmar alteração?")) return;
 
-    const { error } = await _supabase.from('events').insert([{
+    const { error } = await client.from('events').insert([{
         title,
         start_time: start,
         end_time: end,
