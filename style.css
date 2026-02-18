@@ -1,0 +1,76 @@
+:root {
+    --primary: #2563eb;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #1e293b;
+    --border: #e2e8f0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+
+body { background: var(--bg); color: var(--text); }
+
+header { 
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem 2rem; background: var(--card); border-bottom: 1px solid var(--border);
+}
+
+.logo span { color: var(--primary); font-weight: bold; }
+
+main { display: grid; grid-template-columns: 250px 1fr; height: calc(100vh - 70px); }
+
+#sidebar { padding: 1.5rem; border-right: 1px solid var(--border); background: #fff; }
+
+#calendar-grid { 
+    display: grid; grid-template-columns: repeat(7, 1fr); 
+    background: var(--border); gap: 1px; flex-grow: 1;
+}
+
+.calendar-day { 
+    background: #fff; min-height: 120px; padding: 5px;
+    transition: background 0.3s;
+}
+
+.event-tag {
+    font-size: 0.75rem; padding: 4px 8px; border-radius: 4px;
+    margin-bottom: 2px; color: white; cursor: pointer;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    main { grid-template-columns: 1fr; }
+    #sidebar { display: none; }
+}
+
+.modal-overlay {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px;
+}
+
+.hidden { display: none !important; }
+
+input, textarea {
+    width: 100%; padding: 0.8rem; margin: 0.5rem 0;
+    border: 1px solid var(--border); border-radius: 6px;
+}
+
+/* Estilos Adicionais para Tabela Admin */
+.admin-container { padding: 2rem; max-width: 1000px; margin: 0 auto; }
+table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+th { background: #f1f5f9; font-weight: 600; }
+.btn-danger { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+
+/* Feedback visual para usuários sem permissão */
+.read-only-mode #event-modal, 
+.read-only-mode .btn-primary { 
+    display: none !important; 
+}
+
+.btn-primary { background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 6px; cursor: pointer; }

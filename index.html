@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartCalendar | FullStack</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div id="app">
+        <section id="login-screen" class="modal-overlay">
+            <div class="modal-content">
+                <h2>Acesso ao Calendário</h2>
+                <div class="input-group">
+                    <input type="text" id="login-user" placeholder="Usuário (ex: sysadmin)">
+                    <input type="password" id="login-pass" placeholder="Senha">
+                </div>
+                <button class="btn-primary" id="btn-entrar">Entrar</button>
+            </div>
+        </section>
+
+        <header class="hidden" id="main-header">
+            <div class="logo">Smart<span>Calendar</span></div>
+            <div class="user-info">
+                <span id="display-user"></span>
+                <a href="admin.html" id="admin-link" class="hidden btn-admin">Painel Admin</a>
+                <button id="btn-logout" class="btn-sec">Sair</button>
+            </div>
+        </header>
+
+        <main class="hidden" id="main-content">
+            <aside id="sidebar">
+                <button class="btn-primary" id="btn-novo-evento">+ Novo Evento</button>
+                <div id="user-list">
+                    <h4>Membros Online</h4>
+                    <ul id="users-display"></ul>
+                </div>
+            </aside>
+
+            <section id="calendar-container">
+                <div id="calendar-header">
+                    <button id="prev-month">&#10094;</button>
+                    <h3 id="current-month-display">Janeiro 2026</h3>
+                    <button id="next-month">&#10095;</button>
+                </div>
+                <div id="calendar-grid">
+                    </div>
+            </section>
+        </main>
+
+        <div id="event-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <h3>Agendar Compromisso</h3>
+                <input type="text" id="event-name" placeholder="Título">
+                <textarea id="event-desc" placeholder="Descrição"></textarea>
+                <div class="row">
+                    <label>Início: <input type="datetime-local" id="event-start"></label>
+                    <label>Fim: <input type="datetime-local" id="event-end"></label>
+                </div>
+                <div class="actions">
+                    <button class="btn-sec" id="btn-cancelar">Cancelar</button>
+                    <button class="btn-primary" id="btn-salvar">Confirmar Alteração</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
