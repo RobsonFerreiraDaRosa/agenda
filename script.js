@@ -1,9 +1,7 @@
 const SUPABASE_URL = 'https://glrkrhayqppureihpwnq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdscmtyaGF5cXBwdXJlaWhwd25xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzOTk0MzcsImV4cCI6MjA4Njk3NTQzN30.O2bH1P57b05TkR5F0oQEZhReQ6dAEm7GdYHMtKqpKhk';
 
-// Nomeamos como 'client' para não confundir com o objeto 'supabase' da CDN
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
 let currentUser = null;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -18,49 +16,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function checkSession() {
     const { data: { session } } = await client.auth.getSession();
-    if (session) loadUserProfile(session.user.id);
+    if (session) {
+        loadUserProfile(session.user.id);
+    } else {
+        document.getElementById('login-screen').classList.remove('hidden');
+    }
 }
 
 async function handleLogin() {
     const userHandle = document.getElementById('login-user').value;
     const pass = document.getElementById('login-pass').value;
-    
     if(!userHandle || !pass) return alert("Preencha os campos!");
     
     const email = `${userHandle.trim()}@calendario.com`;
+    const { data, error } = await client.auth.signInWithPassword({ email, password: pass });
 
-    const { data, error } = await client.auth.signInWithPassword({
-        email: email,
-        password: pass,
-    });
-
-    if (error) {
-        alert("Falha no login: " + error.message);
-    } else {
-        loadUserProfile(data.user.id);
-    }
+    if (error) alert("Falha no login: " + error.message);
+    else loadUserProfile(data.user.id);
 }
 
 async function loadUserProfile(userId) {
-    const { data, error } = await client.from('profiles').select('*').eq('id', userId).single();
-    
+    const { data } = await client.from('profiles').select('*').eq('id', userId).single();
     if (data) {
         currentUser = data;
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('main-header').classList.remove('hidden');
         document.getElementById('main-content').classList.remove('hidden');
         document.getElementById('display-user').innerText = `Logado como: ${data.username}`;
-        
         if (data.is_admin) document.getElementById('admin-link').classList.remove('hidden');
-        
         initCalendar();
         subscribeRealtime();
     }
 }
 
 function handleLogout() {
-    client.auth.signOut();
-    location.reload();
+    client.auth.signOut().then(() => location.reload());
 }
 
 function initCalendar() {
@@ -76,9 +66,7 @@ function initCalendar() {
 }
 
 async function loadEvents() {
-    const { data } = await client
-        .from('events')
-        .select(`*, profiles:created_by(username, color)`);
+    const { data } = await client.from('events').select(`*, profiles:created_by(username, color)`);
     if (data) renderEvents(data);
 }
 
@@ -91,20 +79,18 @@ function renderEvents(events) {
             const evEl = document.createElement('div');
             evEl.className = 'event-tag';
             evEl.style.backgroundColor = ev.profiles?.color || '#3b82f6';
-            evEl.innerText = `${ev.title} (${ev.profiles?.username || 'S/N'})`;
+            evEl.innerText = `${ev.title} (${ev.profiles?.username || '?'})`;
             dayContainer.appendChild(evEl);
         }
     });
 }
 
 function subscribeRealtime() {
-    client.channel('calendar-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => loadEvents())
-    .subscribe();
+    client.channel('calendar-changes').on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => loadEvents()).subscribe();
 }
 
 function openModal() {
-    if (!currentUser.can_edit) return alert("Acesso de leitura apenas.");
+    if (!currentUser.can_edit) return alert("Somente leitura.");
     document.getElementById('event-modal').classList.remove('hidden');
 }
 
@@ -114,17 +100,11 @@ async function saveEvent() {
     const title = document.getElementById('event-name').value;
     const start = document.getElementById('event-start').value;
     const end = document.getElementById('event-end').value;
-
-    if (!confirm("Confirmar alteração?")) return;
+    if (!confirm("Confirmar evento?")) return;
 
     const { error } = await client.from('events').insert([{
-        title,
-        start_time: start,
-        end_time: end,
-        created_by: currentUser.id,
-        updated_by: currentUser.id
+        title, start_time: start, end_time: end, created_by: currentUser.id, updated_by: currentUser.id
     }]);
-
     if (error) alert(error.message);
     else closeModal();
 }
