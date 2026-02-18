@@ -8,56 +8,46 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="admin-page">
-    <nav>
-        <a href="index.html">← Voltar ao Calendário</a>
-        <h2>Gestão de Usuários</h2>
-    </nav>
+    <header>
+        <div class="logo">Smart<span>Admin</span></div>
+        <div class="user-info">
+            <a href="index.html" class="btn-sec">← Voltar ao Calendário</a>
+        </div>
+    </header>
 
     <main class="admin-container">
-        <section class="user-management">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Usuário</th>
-                        <th>Admin?</th>
-                        <th>Pode Editar?</th>
-                        <th>Cor</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="admin-user-list">
-                    </tbody>
-            </table>
+        <section class="admin-card">
+            <h3>Cadastrar Novo Usuário</h3>
+            <div class="admin-form">
+                <input type="text" id="new-username" placeholder="Usuário (ex: robson)">
+                <input type="password" id="new-password" placeholder="Senha">
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="new-is-admin"> Admin</label>
+                    <label><input type="checkbox" id="new-can-edit" checked> Editor</label>
+                </div>
+                <button onclick="createUser()" class="btn-primary">Criar Usuário</button>
+            </div>
+        </section>
+
+        <section class="admin-card">
+            <h3>Gestão de Usuários</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuário</th>
+                            <th>Admin?</th>
+                            <th>Pode Editar?</th>
+                            <th>Cor</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body"></tbody>
+                </table>
+            </div>
         </section>
     </main>
 
-    <script>
-        const SUPABASE_URL = 'SUA_URL';
-        const SUPABASE_KEY = 'SUA_KEY';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        async function loadUsers() {
-            const { data: users } = await supabase.from('profiles').select('*');
-            const tbody = document.getElementById('admin-user-list');
-            tbody.innerHTML = users.map(user => `
-                <tr>
-                    <td>${user.username}</td>
-                    <td><input type="checkbox" ${user.is_admin ? 'checked' : ''} onchange="updatePerm('${user.id}', 'is_admin', this.checked)"></td>
-                    <td><input type="checkbox" ${user.can_edit ? 'checked' : ''} onchange="updatePerm('${user.id}', 'can_edit', this.checked)"></td>
-                    <td><input type="color" value="${user.color}" onchange="updatePerm('${user.id}', 'color', this.value)"></td>
-                    <td><button onclick="deleteUser('${user.id}')" class="btn-danger">Excluir</button></td>
-                </tr>
-            `).join('');
-        }
-
-        async function updatePerm(id, field, value) {
-            const updates = {};
-            updates[field] = value;
-            const { error } = await supabase.from('profiles').update(updates).eq('id', id);
-            if (error) alert("Erro ao atualizar: " + error.message);
-        }
-
-        loadUsers();
-    </script>
+    <script src="admin.js"></script>
 </body>
 </html>
