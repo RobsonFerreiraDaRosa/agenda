@@ -73,4 +73,44 @@ th { background: #f1f5f9; font-weight: 600; }
     display: none !important; 
 }
 
+.admin-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    margin-bottom: 2rem;
+}
+
+.admin-form {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.admin-form input[type="text"], 
+.admin-form input[type="password"] {
+    flex: 1;
+    min-width: 200px;
+}
+
+.checkbox-group {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.9rem;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.btn-admin {
+    background: #f59e0b;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
 .btn-primary { background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 6px; cursor: pointer; }
