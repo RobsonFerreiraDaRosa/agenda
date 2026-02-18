@@ -10,34 +10,32 @@
 <body class="admin-page">
     <header>
         <div class="logo">Smart<span>Admin</span></div>
-        <div class="user-info">
-            <a href="index.html" class="btn-sec">← Voltar ao Calendário</a>
-        </div>
+        <a href="index.html" class="btn-sec">Voltar ao Calendário</a>
     </header>
 
     <main class="admin-container">
         <section class="admin-card">
-            <h3>Cadastrar Novo Usuário</h3>
+            <h3>Novo Usuário</h3>
             <div class="admin-form">
-                <input type="text" id="new-username" placeholder="Usuário (ex: robson)">
+                <input type="text" id="new-username" placeholder="robson">
                 <input type="password" id="new-password" placeholder="Senha">
                 <div class="checkbox-group">
                     <label><input type="checkbox" id="new-is-admin"> Admin</label>
                     <label><input type="checkbox" id="new-can-edit" checked> Editor</label>
                 </div>
-                <button onclick="createUser()" class="btn-primary">Criar Usuário</button>
+                <button id="btn-create-user" class="btn-primary">Criar</button>
             </div>
         </section>
 
         <section class="admin-card">
-            <h3>Gestão de Usuários</h3>
+            <h3>Membros do Sistema</h3>
             <div class="table-responsive">
                 <table>
                     <thead>
                         <tr>
                             <th>Usuário</th>
-                            <th>Admin?</th>
-                            <th>Pode Editar?</th>
+                            <th>Admin</th>
+                            <th>Editor</th>
                             <th>Cor</th>
                             <th>Ações</th>
                         </tr>
@@ -47,7 +45,6 @@
             </div>
         </section>
     </main>
-
     <script src="admin.js"></script>
 </body>
 </html>
