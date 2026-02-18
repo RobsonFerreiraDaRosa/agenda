@@ -1,37 +1,12 @@
-// admin.js - VERSÃO SEGURA
 const SUPABASE_URL = 'https://glrkrhayqppureihpwnq.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdscmtyaGF5cXBwdXJlaWhwd25xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzOTk0MzcsImV4cCI6MjA4Njk3NTQzN30.O2bH1P57b05TkR5F0oQEZhReQ6dAEm7GdYHMtKqpKhk';
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Use a anon key aqui
 
-async function createUser() {
-    const username = document.getElementById('new-username').value;
-    const password = document.getElementById('new-password').value;
-    const isAdmin = document.getElementById('new-is-admin').checked;
-    const canEdit = document.getElementById('new-can-edit').checked;
+const adminClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    if (!username || !password) return alert("Preencha tudo!");
-
-    // Chamando a Edge Function em vez de tentar criar direto pelo JS
-    const { data, error } = await _supabase.functions.invoke('create-user', {
-        body: { username, password, isAdmin, canEdit }
-    });
-
-    if (error) {
-        alert("Erro na Função: " + error.message);
-    } else {
-        alert("Usuário criado com segurança via Edge Function!");
-        location.reload();
-    }
-}
-
-// O restante das funções (fetchUsers, updateToggle) permanece usando o _supabase padrão
-// Certifique-se de que as Policies (RLS) no SQL permitem que o usuário logado
-// como admin faça o SELECT e UPDATE na tabela profiles.
-// Carregar lista ao iniciar
 document.addEventListener('DOMContentLoaded', fetchUsers);
 
 async function fetchUsers() {
-    const { data: profiles, error } = await _admin
+    const { data: profiles, error } = await adminClient
         .from('profiles')
         .select('*')
         .order('username', { ascending: true });
@@ -42,6 +17,7 @@ async function fetchUsers() {
 
 function renderUserTable(users) {
     const tbody = document.getElementById('user-table-body');
+    if(!tbody) return;
     tbody.innerHTML = users.map(user => `
         <tr>
             <td><strong>${user.username}</strong></td>
@@ -53,50 +29,33 @@ function renderUserTable(users) {
     `).join('');
 }
 
-// FUNÇÃO MESTRE: Criar Usuário no Auth e no Profile
 async function createUser() {
-    const user = document.getElementById('new-username').value;
-    const pass = document.getElementById('new-password').value;
+    const username = document.getElementById('new-username').value;
+    const password = document.getElementById('new-password').value;
     const isAdmin = document.getElementById('new-is-admin').checked;
     const canEdit = document.getElementById('new-can-edit').checked;
 
-    if (!user || !pass) return alert("Preencha todos os campos!");
+    if (!username || !password) return alert("Preencha tudo!");
 
-    const email = `${user}@calendario.com`;
-
-    // 1. Cria no Auth do Supabase
-    const { data, error: authError } = await _admin.auth.admin.createUser({
-        email: email,
-        password: pass,
-        email_confirm: true
+    // Chama a Edge Function que você criou no painel do Supabase
+    const { data, error } = await adminClient.functions.invoke('create-user', {
+        body: { username, password, isAdmin, canEdit }
     });
 
-    if (authError) {
-        alert("Erro no Auth: " + authError.message);
-        return;
+    if (error) alert("Erro: " + error.message);
+    else {
+        alert("Usuário criado com sucesso!");
+        fetchUsers();
     }
-
-    // 2. O Trigger SQL que criamos anteriormente já deve criar o profile automaticamente.
-    // Mas vamos forçar uma atualização das permissões que marcamos no formulário:
-    await _admin.from('profiles').update({
-        is_admin: isAdmin,
-        can_edit: canEdit
-    }).eq('id', data.user.id);
-
-    alert(`Usuário ${user} criado com sucesso!`);
-    location.reload();
 }
 
 async function updateToggle(id, field, value) {
-    const { error } = await _admin.from('profiles').update({ [field]: value }).eq('id', id);
+    const { error } = await adminClient.from('profiles').update({ [field]: value }).eq('id', id);
     if (error) alert("Erro ao atualizar: " + error.message);
 }
 
 async function deleteUser(id) {
-    if (!confirm("Tem certeza que deseja remover este usuário? Isso é irreversível.")) return;
-    
-    // Remove do Auth (O Cascade no SQL removerá o profile)
-    const { error } = await _admin.auth.admin.deleteUser(id);
-    if (error) alert(error.message);
-    else fetchUsers();
+    if (!confirm("Excluir usuário?")) return;
+    // Para deletar você precisará de uma Edge Function também ou usar a Service Key (não seguro)
+    alert("Funcionalidade de exclusão deve ser via Edge Function para segurança.");
 }
